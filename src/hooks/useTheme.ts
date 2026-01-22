@@ -15,7 +15,6 @@ export const useTheme = () => {
   const { theme } = useSelector((state: RootState) => state.app);
   const isSystemTheme = theme === 'system';
   const currentTheme = isSystemTheme ? Appearance.getColorScheme() : theme;
-  console.log("hello..",currentTheme)
 
   const getThemeColors = () => {
     switch (currentTheme) {
