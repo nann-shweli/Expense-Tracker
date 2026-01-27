@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import auth from '@react-native-firebase/auth';
+
+import Typography from '../../components/atoms/Typography';
 
 const Dashboard = () => {
   const handleLogout = async () => {
@@ -8,13 +10,22 @@ const Dashboard = () => {
   };
 
   return (
-    <View>
-      <Text>Dashboard Screen</Text>
+    <View style={styles.container}>
+      <Typography>Dashboard Screen</Typography>
       <TouchableOpacity onPress={handleLogout}>
-        <Text>Logout</Text>
+        <Typography>Logout</Typography>
       </TouchableOpacity>
     </View>
   );
 };
 
 export default Dashboard;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignContent: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

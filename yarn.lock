@@ -3211,6 +3211,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-navigation/bottom-tabs@npm:^7.10.1":
+  version: 7.10.1
+  resolution: "@react-navigation/bottom-tabs@npm:7.10.1"
+  dependencies:
+    "@react-navigation/elements": "npm:^2.9.5"
+    color: "npm:^4.2.3"
+    sf-symbols-typescript: "npm:^2.1.0"
+  peerDependencies:
+    "@react-navigation/native": ^7.1.28
+    react: ">= 18.2.0"
+    react-native: "*"
+    react-native-safe-area-context: ">= 4.0.0"
+    react-native-screens: ">= 4.0.0"
+  checksum: 10c0/1948f7a741e731202eef1ebc6c6c8a425a22f81f3469022b447d521895769da6c91ae336ff7b16ed982cc80d8572d405ccb48c688757c2e4794da3eee948f22f
+  languageName: node
+  linkType: hard
+
 "@react-navigation/core@npm:^7.14.0":
   version: 7.14.0
   resolution: "@react-navigation/core@npm:7.14.0"
@@ -3226,6 +3243,26 @@ __metadata:
   peerDependencies:
     react: ">= 18.2.0"
   checksum: 10c0/9921f299b73823355f482c3e61e2e386b2f2231cebcc095f00a2e79c9ac09ef2732786004435b4caa4f8f24d1cb7d6736488008e65b62f48d08504cb6c2431f2
+  languageName: node
+  linkType: hard
+
+"@react-navigation/drawer@npm:^7.7.13":
+  version: 7.7.13
+  resolution: "@react-navigation/drawer@npm:7.7.13"
+  dependencies:
+    "@react-navigation/elements": "npm:^2.9.5"
+    color: "npm:^4.2.3"
+    react-native-drawer-layout: "npm:^4.2.1"
+    use-latest-callback: "npm:^0.2.4"
+  peerDependencies:
+    "@react-navigation/native": ^7.1.28
+    react: ">= 18.2.0"
+    react-native: "*"
+    react-native-gesture-handler: ">= 2.0.0"
+    react-native-reanimated: ">= 2.0.0"
+    react-native-safe-area-context: ">= 4.0.0"
+    react-native-screens: ">= 4.0.0"
+  checksum: 10c0/314ac8fd5bae38006bbc856054c9363e416b5cd3613fbaede696b21b9a313c97097eeeb0b93b8c322c6e9638a29c824a488ca9cabbc5f7efe4c5b23ff3223061
   languageName: node
   linkType: hard
 
@@ -3755,6 +3792,8 @@ __metadata:
     "@react-native/metro-config": "npm:0.83.1"
     "@react-native/new-app-screen": "npm:0.83.1"
     "@react-native/typescript-config": "npm:0.83.1"
+    "@react-navigation/bottom-tabs": "npm:^7.10.1"
+    "@react-navigation/drawer": "npm:^7.7.13"
     "@react-navigation/native": "npm:^7.1.28"
     "@react-navigation/native-stack": "npm:^7.10.0"
     "@react-navigation/stack": "npm:^7.6.15"
@@ -3773,9 +3812,10 @@ __metadata:
     react-hook-form: "npm:^7.71.1"
     react-native: "npm:0.83.1"
     react-native-gesture-handler: "npm:^2.30.0"
+    react-native-keyboard-controller: "npm:^1.20.6"
     react-native-reanimated: "npm:3.19.5"
     react-native-safe-area-context: "npm:^5.6.2"
-    react-native-screens: "npm:^4.19.0"
+    react-native-screens: "npm:^4.20.0"
     react-native-vector-icons: "npm:^10.3.0"
     react-redux: "npm:^9.2.0"
     react-test-renderer: "npm:19.2.0"
@@ -8696,6 +8736,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-drawer-layout@npm:^4.2.1":
+  version: 4.2.1
+  resolution: "react-native-drawer-layout@npm:4.2.1"
+  dependencies:
+    color: "npm:^4.2.3"
+    use-latest-callback: "npm:^0.2.4"
+  peerDependencies:
+    react: ">= 18.2.0"
+    react-native: "*"
+    react-native-gesture-handler: ">= 2.0.0"
+    react-native-reanimated: ">= 2.0.0"
+  checksum: 10c0/156960cf9947db0628e4ae5f4ba39c85c4fd75825326090eb9a3051aec94bd0b429e6f90e5983e3da64fe124ef41887e344cf08e5f40a27a2d6a81e0ebeec3b2
+  languageName: node
+  linkType: hard
+
 "react-native-gesture-handler@npm:^2.30.0":
   version: 2.30.0
   resolution: "react-native-gesture-handler@npm:2.30.0"
@@ -8717,6 +8772,29 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10c0/b7a37437f439b1e27a4d980de01994aa71b9091dc3ed00c21172d5505fb11978cd5ed3a43f97c89d502a3a08cf26e5cea6435b8d6e93d3557a92dd43563f7021
+  languageName: node
+  linkType: hard
+
+"react-native-is-edge-to-edge@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "react-native-is-edge-to-edge@npm:1.2.1"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/87d20b900aded7d44c90afb946a7aa03c23a94ca3dd547bdddc2303b85357e4aab22567a57b19f1558d6c8be7058e3dcf34faa1e15182d1604f90974266d9a1d
+  languageName: node
+  linkType: hard
+
+"react-native-keyboard-controller@npm:^1.20.6":
+  version: 1.20.6
+  resolution: "react-native-keyboard-controller@npm:1.20.6"
+  dependencies:
+    react-native-is-edge-to-edge: "npm:^1.2.1"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+    react-native-reanimated: ">=3.0.0"
+  checksum: 10c0/50d99221cf6a7b628691c7070adc92fe1dfb9928e4a5cf1453680d6742ae9ba9199f7eaa137d3b0f9ce48102b86bd30becfd08fe32046b08026e654ad27191ea
   languageName: node
   linkType: hard
 
@@ -8754,7 +8832,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-screens@npm:^4.19.0":
+"react-native-screens@npm:^4.20.0":
   version: 4.20.0
   resolution: "react-native-screens@npm:4.20.0"
   dependencies:

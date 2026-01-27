@@ -33,10 +33,10 @@ export const dark = {
 	...colors,
 
 	container: {
-		backgroundColor: "#0D0606",
+		backgroundColor: "#0B121A",
 	},
 	card: {
-		fill1: "#161313",
+		fill1: "#1C222E",
 	},
 	navbar: {
 		borderColor: "#1F1F20"

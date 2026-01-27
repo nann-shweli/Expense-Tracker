@@ -27,8 +27,6 @@ const Login = () => {
   const toggleTheme = () => {
     setTheme(currentTheme === 'light' ? 'dark' : 'light');
   };
-
-
 const handleEmailAuth = async () => {
   if (!email || !password) {
     Alert.alert('Error', 'Please enter email and password');
@@ -50,7 +48,6 @@ const handleEmailAuth = async () => {
     setLoading(false);
   }
 };
-
 
   return (
     <View
