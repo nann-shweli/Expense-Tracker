@@ -1,12 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import auth from '@react-native-firebase/auth';
 
 import Card from '../../atoms/Card';
 import { useTheme } from '../../../hooks/useTheme';
 
-const Profile = ({ user }: any) => {
+const Profile = () => {
   const { themeColors } = useTheme();
+  const user = auth().currentUser;
 
   return (
     <Card style={styles.container}>

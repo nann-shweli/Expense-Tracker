@@ -4,19 +4,24 @@ import Card from '../../atoms/Card';
 import { useTheme } from '../../../hooks/useTheme';
 import SwitchCom from '../../atoms/Switch';
 
-const ThemeCard = ({ value, onValueChange }: any) => {
-  const { themeColors } = useTheme();
+const ThemeCard = () => {
+  const { themeColors, currentTheme, setTheme } = useTheme();
+  const isDarkMode = currentTheme === 'dark';
+
+  const handleToggleTheme = (value: boolean) => {
+    setTheme(value ? 'dark' : 'light');
+  };
 
   return (
     <Card style={styles.container}>
-      <View>
+      <View style={styles.text}>
         <Text style={{ color: themeColors.text.primary }}>Appearance</Text>
         <Text style={{ color: themeColors.text.secondary }}>
           Light / Dark mode
         </Text>
       </View>
 
-      <SwitchCom value={value} onValueChange={onValueChange} />
+      <SwitchCom value={isDarkMode} onValueChange={handleToggleTheme} />
     </Card>
   );
 };
@@ -30,5 +35,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 32,
     marginTop: 24,
+  },
+  text: {
+    gap: 8,
   },
 });
