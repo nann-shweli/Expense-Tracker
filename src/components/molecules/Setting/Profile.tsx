@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { useNavigation as useRNavigation } from '@react-navigation/native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import auth from '@react-native-firebase/auth';
 
@@ -9,6 +10,11 @@ import { useTheme } from '../../../hooks/useTheme';
 const Profile = () => {
   const { themeColors } = useTheme();
   const user = auth().currentUser;
+  const { navigate } = useRNavigation<any>();
+
+  const handleEdit = () => {
+    navigate('EditUser');
+  };
 
   return (
     <Card style={styles.container}>
@@ -23,7 +29,9 @@ const Profile = () => {
         </Text>
       </View>
 
-      <Icon name="pencil" size={22} color={themeColors.text.primary} />
+      <TouchableOpacity onPress={handleEdit}>
+        <Icon name="pencil" size={22} color={themeColors.text.primary} />
+      </TouchableOpacity>
     </Card>
   );
 };

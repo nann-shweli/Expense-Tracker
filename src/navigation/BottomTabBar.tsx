@@ -4,9 +4,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 import Dashboard from '../screens/Home/Dashboard';
-import Setting from '../screens/Home/Setting';
 import Expenses from '../screens/Home/Expense';
 import { useTheme } from '../hooks/useTheme';
+import Setting from '../screens/Home/Settings/Setting';
 
 const Tab = createBottomTabNavigator();
 

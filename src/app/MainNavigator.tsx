@@ -1,13 +1,34 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import BottomTabBar from '../navigation/BottomTabBar';
+import { createStackNavigator } from '@react-navigation/stack';
 
-const Stack = createNativeStackNavigator();
+import BottomTabBar from '../navigation/BottomTabBar';
+import EditUser from '../screens/Home/Settings/EditUser';
+import NavBarHeader from '../components/molecules/Header/NavBarHeader';
+
+const Stack = createStackNavigator();
 
 const MainNavigator = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="MainTabs" component={BottomTabBar} />
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: true,
+        header: props => <NavBarHeader {...props} />,
+      }}
+    >
+      <Stack.Screen
+        name="MainTabs"
+        component={BottomTabBar}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="EditUser"
+        component={EditUser}
+        options={{
+          title: 'Edit Profile',
+        }}
+      />
     </Stack.Navigator>
   );
 };
