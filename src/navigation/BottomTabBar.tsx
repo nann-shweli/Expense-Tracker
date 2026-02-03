@@ -8,6 +8,7 @@ import Dashboard from '../screens/Home/Dashboard';
 import Expenses from '../screens/Home/Expense';
 import { useTheme } from '../hooks/useTheme';
 import Setting from '../screens/Home/Settings/Setting';
+import Subscription from '../screens/Home/Subscription';
 
 const Tab = createBottomTabNavigator();
 
@@ -82,8 +83,9 @@ const BottomTabBar = () => {
 
       <Tab.Screen
         name="Subscriptions"
-        component={Setting}
+        component={Subscription}
         options={{
+          headerShown: true,
           tabBarIcon: ({ color }) => (
             <Icon name="card-outline" size={22} color={color} />
           ),

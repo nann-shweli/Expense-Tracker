@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import BottomTabBar from '../navigation/BottomTabBar';
 import EditUser from '../screens/Home/Settings/EditUser';
 import AddExpense from '../screens/Home/AddExpense';
+import AddSubscription from '../screens/Home/AddSubscription';
 import NavBarHeader from '../components/molecules/Header/NavBarHeader';
 
 const Stack = createStackNavigator();
@@ -33,6 +34,14 @@ const MainNavigator = () => {
       <Stack.Screen
         name="AddExpense"
         component={AddExpense}
+        options={{
+          presentation: 'modal',
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="AddSubscription"
+        component={AddSubscription}
         options={{
           presentation: 'modal',
           headerShown: false,
