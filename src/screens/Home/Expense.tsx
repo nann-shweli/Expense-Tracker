@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import { format } from 'date-fns';
 
@@ -7,7 +7,10 @@ import Typography from '../../components/atoms/Typography';
 import { useTheme } from '../../hooks/useTheme';
 import { subscribeToExpenses, ExpenseData } from '../../services/firestore';
 
+import { useNavigation } from '@react-navigation/native';
+
 const Expense = () => {
+  const navigation = useNavigation<any>();
   const { themeColors } = useTheme();
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [expenses, setExpenses] = useState<ExpenseData[]>([]);
@@ -53,13 +56,16 @@ const Expense = () => {
 
 
   const renderItem = ({ item }: { item: ExpenseData }) => (
-    <View style={[styles.card, { backgroundColor: themeColors.card.fill1 }]}>
+    <TouchableOpacity
+      onPress={() => navigation.navigate('AddExpense', { expense: item })}
+      style={[styles.card, { backgroundColor: themeColors.card.fill1 }]}
+    >
       <View>
         <Typography size={16} style={{ fontWeight: 'bold' }}>{item.description}</Typography>
         <Typography size={12} color="secondary">{item.category}</Typography>
       </View>
       <Typography size={18} color="primary" style={{ color: themeColors.primary.primary0 }}>{Number(item.amount).toLocaleString()} MMK</Typography>
-    </View>
+    </TouchableOpacity>
   );
 
   return (

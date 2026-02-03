@@ -1,47 +1,90 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { addExpense } from '../../services/firestore';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { addExpense, updateExpense, deleteExpense, ExpenseData } from '../../services/firestore';
 import Typography from '../../components/atoms/Typography';
 import { useTheme } from '../../hooks/useTheme';
 
 const AddExpense = () => {
     const { themeColors } = useTheme();
     const navigation = useNavigation();
+    const route = useRoute<any>();
+    const expenseToEdit: ExpenseData | undefined = route.params?.expense;
 
     const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
     const [category, setCategory] = useState('General');
-    const [loading, setLoading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
-    const handleAddExpense = async () => {
+    useEffect(() => {
+        if (expenseToEdit) {
+            setAmount(String(expenseToEdit.amount));
+            setDescription(expenseToEdit.description);
+            setCategory(expenseToEdit.category);
+        }
+    }, [expenseToEdit]);
+
+    const handleSave = async () => {
         if (!amount || !description) {
             Alert.alert('Error', 'Please enter amount and description');
             return;
         }
 
         try {
-            setLoading(true);
+            setIsSaving(true);
             const expenseDate = new Date();
 
-            await addExpense(Number(amount), description, category, expenseDate);
-            setLoading(false);
+            if (expenseToEdit && expenseToEdit.id) {
+                await updateExpense(expenseToEdit.id, Number(amount), description, category);
+            } else {
+                await addExpense(Number(amount), description, category, expenseDate);
+            }
 
-            // Navigate back
+            setIsSaving(false);
             setTimeout(() => {
                 navigation.goBack();
-            }, 100);
+            }, 50);
 
         } catch (error: any) {
-            setLoading(false);
+            setIsSaving(false);
             Alert.alert('Error', error.message);
         }
+    };
+
+    const handleDelete = async () => {
+        if (!expenseToEdit?.id) return;
+
+        Alert.alert(
+            'Delete Expense',
+            'Are you sure you want to delete this expense?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            setIsDeleting(true);
+                            await deleteExpense(expenseToEdit.id!);
+                            setIsDeleting(false);
+                            setTimeout(() => {
+                                navigation.goBack();
+                            }, 50);
+                        } catch (error: any) {
+                            setIsDeleting(false);
+                            Alert.alert('Error', error.message);
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     return (
         <View style={[styles.container, { backgroundColor: themeColors.container.backgroundColor }]}>
             <View style={styles.content}>
-                <Typography size={24} style={styles.title}>Add Expense</Typography>
+                <Typography size={24} style={styles.title}>{expenseToEdit ? 'Edit Expense' : 'Add Expense'}</Typography>
 
                 <TextInput
                     placeholder="Amount"
@@ -50,7 +93,7 @@ const AddExpense = () => {
                     value={amount}
                     onChangeText={setAmount}
                     style={[styles.input, { color: themeColors.text.primary, borderColor: themeColors.text.secondary }]}
-                    autoFocus={true}
+                    autoFocus={!expenseToEdit}
                 />
 
                 <TextInput
@@ -66,12 +109,22 @@ const AddExpense = () => {
                         <Typography color="secondary">Cancel</Typography>
                     </TouchableOpacity>
 
+                    {expenseToEdit && (
+                        <TouchableOpacity
+                            onPress={handleDelete}
+                            style={[styles.deleteButton]}
+                            disabled={isDeleting || isSaving}
+                        >
+                            {isDeleting ? <ActivityIndicator color="#fff" /> : <Typography style={{ color: '#fff' }}>Delete</Typography>}
+                        </TouchableOpacity>
+                    )}
+
                     <TouchableOpacity
-                        onPress={handleAddExpense}
+                        onPress={handleSave}
                         style={[styles.saveButton, { backgroundColor: themeColors.primary.primary0 }]}
-                        disabled={loading}
+                        disabled={isSaving || isDeleting}
                     >
-                        {loading ? <ActivityIndicator color="#fff" /> : <Typography style={{ color: '#fff' }}>Save</Typography>}
+                        {isSaving ? <ActivityIndicator color="#fff" /> : <Typography style={{ color: '#fff' }}>{expenseToEdit ? 'Update' : 'Save'}</Typography>}
                     </TouchableOpacity>
                 </View>
             </View>
@@ -122,5 +175,14 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    deleteButton: {
+        flex: 1,
+        padding: 15,
+        marginLeft: 10,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#ff4444',
     },
 });

@@ -51,7 +51,7 @@ const BottomTabBar = () => {
         name="Home"
         component={Dashboard}
         options={{
-          headerShown: true,
+          headerShown: false,
           tabBarIcon: ({ color }) => (
             <Icon name="home-outline" size={22} color={color} />
           ),

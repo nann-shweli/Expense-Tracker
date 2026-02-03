@@ -27,6 +27,30 @@ export const addExpense = async (amount: number, description: string, category: 
     });
 };
 
+export const updateExpense = async (id: string, amount: number, description: string, category: string, date?: Date) => {
+    const user = auth().currentUser;
+    if (!user) throw new Error('User not logged in');
+
+    const updateData: any = {
+        amount,
+        description,
+        category,
+    };
+
+    if (date) {
+        updateData.date = firestore.Timestamp.fromDate(date);
+    }
+
+    await expensesCollection.doc(id).update(updateData);
+};
+
+export const deleteExpense = async (id: string) => {
+    const user = auth().currentUser;
+    if (!user) throw new Error('User not logged in');
+
+    await expensesCollection.doc(id).delete();
+};
+
 export const getExpenses = async () => {
     const user = auth().currentUser;
     if (!user) throw new Error('User not logged in');

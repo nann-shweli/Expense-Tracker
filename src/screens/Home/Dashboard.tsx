@@ -84,7 +84,8 @@ export default Dashboard;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 60,
+    paddingTop: 80,
+    paddingBottom: 80
   },
   header: {
     flexDirection: 'row',
