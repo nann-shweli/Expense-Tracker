@@ -26,7 +26,7 @@ const Subscription = () => {
     const totals = useMemo(() => {
         let monthly = 0;
         let yearly = 0;
-        subscriptions.forEach(sub => {
+        subscriptions.filter(sub => sub.isActive).forEach(sub => {
             if (sub.billingCycle === 'Monthly') {
                 monthly += Number(sub.amount);
                 yearly += Number(sub.amount) * 12;
@@ -41,19 +41,24 @@ const Subscription = () => {
     const renderItem = ({ item }: { item: SubscriptionData }) => (
         <TouchableOpacity
             onPress={() => navigation.navigate('AddSubscription', { subscription: item })}
-            style={[styles.card, { backgroundColor: themeColors.card.fill1 }]}
+            style={[styles.card, { backgroundColor: themeColors.card.fill1, opacity: item.isActive ? 1 : 0.6 }]}
         >
             <View style={styles.cardLeft}>
-                <View style={[styles.iconContainer, { backgroundColor: themeColors.primary.primary0 }]}>
-                    <Icon name="card" size={20} color="#fff" />
+                <View style={[styles.iconContainer, { backgroundColor: item.isActive ? themeColors.primary.primary0 : themeColors.text.secondary }]}>
+                    <Icon name={item.isActive ? "card" : "pause"} size={20} color="#fff" />
                 </View>
                 <View>
-                    <Typography size={16} style={{ fontWeight: 'bold' }}>{item.name}</Typography>
-                    <Typography size={12} color="secondary">{item.category} • Day {item.billingDate}</Typography>
+                    <Typography size={16} style={{ fontWeight: 'bold' }}>
+                        {item.name} {!item.isActive && <Typography size={12}>(Paused)</Typography>}
+                    </Typography>
+                    <Typography size={12} color="secondary">
+                        {item.category} • Day {item.billingDate}
+                        {item.duration ? ` • ${item.duration}m` : ''}
+                    </Typography>
                 </View>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
-                <Typography size={16} style={{ fontWeight: 'bold', color: themeColors.primary.primary0 }}>
+                <Typography size={16} style={{ fontWeight: 'bold', color: item.isActive ? themeColors.primary.primary0 : themeColors.text.secondary }}>
                     {item.amount.toLocaleString()} MMK
                 </Typography>
                 <Typography size={12} color="secondary">

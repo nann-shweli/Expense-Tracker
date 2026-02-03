@@ -92,11 +92,13 @@ export interface SubscriptionData {
     billingCycle: 'Monthly' | 'Yearly';
     billingDate: number; // Day of month (1-31)
     category: string;
+    isActive: boolean;
+    duration?: number; // Duration in months
     userId: string;
     createdAt: any;
 }
 
-export const addSubscription = async (name: string, amount: number, billingCycle: 'Monthly' | 'Yearly', billingDate: number, category: string) => {
+export const addSubscription = async (name: string, amount: number, billingCycle: 'Monthly' | 'Yearly', billingDate: number, category: string, isActive: boolean = true, duration?: number) => {
     const user = auth().currentUser;
     if (!user) throw new Error('User not logged in');
 
@@ -106,12 +108,14 @@ export const addSubscription = async (name: string, amount: number, billingCycle
         billingCycle,
         billingDate,
         category,
+        isActive,
+        duration: duration || null,
         userId: user.uid,
         createdAt: firestore.FieldValue.serverTimestamp(),
     });
 };
 
-export const updateSubscription = async (id: string, name: string, amount: number, billingCycle: 'Monthly' | 'Yearly', billingDate: number, category: string) => {
+export const updateSubscription = async (id: string, name: string, amount: number, billingCycle: 'Monthly' | 'Yearly', billingDate: number, category: string, isActive: boolean, duration?: number) => {
     const user = auth().currentUser;
     if (!user) throw new Error('User not logged in');
 
@@ -121,6 +125,8 @@ export const updateSubscription = async (id: string, name: string, amount: numbe
         billingCycle,
         billingDate,
         category,
+        isActive,
+        duration: duration || null,
     });
 };
 

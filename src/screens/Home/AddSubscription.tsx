@@ -17,6 +17,8 @@ const AddSubscription = () => {
     const [billingCycle, setBillingCycle] = useState<'Monthly' | 'Yearly'>('Monthly');
     const [billingDate, setBillingDate] = useState('1');
     const [category, setCategory] = useState('Entertainment');
+    const [isActive, setIsActive] = useState(true);
+    const [duration, setDuration] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -27,6 +29,8 @@ const AddSubscription = () => {
             setBillingCycle(subscriptionToEdit.billingCycle);
             setBillingDate(String(subscriptionToEdit.billingDate));
             setCategory(subscriptionToEdit.category);
+            setIsActive(subscriptionToEdit.isActive ?? true);
+            setDuration(subscriptionToEdit.duration ? String(subscriptionToEdit.duration) : '');
         }
     }, [subscriptionToEdit]);
 
@@ -42,12 +46,14 @@ const AddSubscription = () => {
             return;
         }
 
+        const durationNum = duration ? parseInt(duration) : undefined;
+
         try {
             setIsSaving(true);
             if (subscriptionToEdit && subscriptionToEdit.id) {
-                await updateSubscription(subscriptionToEdit.id, name, Number(amount), billingCycle, dateNum, category);
+                await updateSubscription(subscriptionToEdit.id, name, Number(amount), billingCycle, dateNum, category, isActive, durationNum);
             } else {
-                await addSubscription(name, Number(amount), billingCycle, dateNum, category);
+                await addSubscription(name, Number(amount), billingCycle, dateNum, category, isActive, durationNum);
             }
             setIsSaving(false);
             setTimeout(() => {
@@ -93,6 +99,16 @@ const AddSubscription = () => {
             <View style={styles.content}>
                 <Typography size={24} style={styles.title}>{subscriptionToEdit ? 'Edit Subscription' : 'Add Subscription'}</Typography>
 
+                <View style={styles.statusContainer}>
+                    <Typography size={16}>Status</Typography>
+                    <TouchableOpacity
+                        onPress={() => setIsActive(!isActive)}
+                        style={[styles.statusToggle, { backgroundColor: isActive ? themeColors.primary.primary0 : themeColors.text.secondary }]}
+                    >
+                        <Typography style={{ color: '#fff' }}>{isActive ? 'Active' : 'Paused'}</Typography>
+                    </TouchableOpacity>
+                </View>
+
                 <TextInput
                     placeholder="Subscription Name (e.g. Netflix)"
                     placeholderTextColor={themeColors.text.secondary}
@@ -133,6 +149,15 @@ const AddSubscription = () => {
                     keyboardType="numeric"
                     value={billingDate}
                     onChangeText={setBillingDate}
+                    style={[styles.input, { color: themeColors.text.primary, borderColor: themeColors.text.secondary }]}
+                />
+
+                <TextInput
+                    placeholder="Duration (Months, optional)"
+                    placeholderTextColor={themeColors.text.secondary}
+                    keyboardType="numeric"
+                    value={duration}
+                    onChangeText={setDuration}
                     style={[styles.input, { color: themeColors.text.primary, borderColor: themeColors.text.secondary }]}
                 />
 
@@ -188,6 +213,18 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 30,
         textAlign: 'center',
+    },
+    statusContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+        paddingHorizontal: 5,
+    },
+    statusToggle: {
+        paddingHorizontal: 20,
+        paddingVertical: 8,
+        borderRadius: 20,
     },
     label: {
         marginBottom: 8,
