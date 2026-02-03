@@ -11,7 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 
 const Expense = () => {
   const navigation = useNavigation<any>();
-  const { themeColors } = useTheme();
+  const { themeColors, currentTheme } = useTheme();
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [expenses, setExpenses] = useState<ExpenseData[]>([]);
 
@@ -71,6 +71,7 @@ const Expense = () => {
   return (
     <View style={[styles.container, { backgroundColor: themeColors.container.backgroundColor }]}>
       <Calendar
+        key={currentTheme}
         current={selectedDate}
         onDayPress={(day: DateData) => setSelectedDate(day.dateString)}
         markedDates={markedDates}
@@ -84,6 +85,7 @@ const Expense = () => {
           selectedDayTextColor: '#ffffff',
           todayTextColor: themeColors.primary.primary0,
         }}
+        enableSwipeMonths={true}
       />
 
       <View style={styles.summaryContainer}>
