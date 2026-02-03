@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TextInput, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TextInput, Alert, TouchableOpacity } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,6 +10,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import FormContainer from '../../../components/atoms/FormContainer';
 import Typography from '../../../components/atoms/Typography';
 import { useTheme } from '../../../hooks/useTheme';
+import Loading from '../../../components/atoms/Loading';
 
 const schema = z.object({
   displayName: z.string().min(2, 'Name must be at least 2 characters'),
@@ -134,7 +135,7 @@ const EditUser = () => {
         disabled={loading}
       >
         {loading ? (
-          <ActivityIndicator color="#fff" />
+          <Loading />
         ) : (
           <Typography color="#fff" style={styles.buttonText}>
             Update Profile

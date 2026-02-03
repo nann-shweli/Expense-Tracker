@@ -4,7 +4,6 @@ import {
   TouchableOpacity,
   TextInput,
   Text,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +12,7 @@ import { useState } from 'react';
 
 import { useTheme } from '../../hooks/useTheme';
 import { loginWithEmail, signUpWithEmail, signInWithGoogle } from '../../services/auth/firebaseAuth';
+import Loading from '../../components/atoms/Loading';
 
 
 const Login = () => {
@@ -126,7 +126,7 @@ const Login = () => {
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <Loading />
           ) : (
             <Text style={styles.loginText}>
               {isRegister ? 'Register' : 'Login'}

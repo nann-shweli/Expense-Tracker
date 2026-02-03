@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+
 import { addExpense, updateExpense, deleteExpense, ExpenseData } from '../../services/firestore';
 import Typography from '../../components/atoms/Typography';
 import { useTheme } from '../../hooks/useTheme';
+import Loading from '../../components/atoms/Loading';
 
 const AddExpense = () => {
     const { themeColors } = useTheme();
@@ -115,7 +117,7 @@ const AddExpense = () => {
                             style={[styles.deleteButton]}
                             disabled={isDeleting || isSaving}
                         >
-                            {isDeleting ? <ActivityIndicator color="#fff" /> : <Typography style={{ color: '#fff' }}>Delete</Typography>}
+                            {isDeleting ? <Loading /> : <Typography style={{ color: '#fff' }}>Delete</Typography>}
                         </TouchableOpacity>
                     )}
 
@@ -124,7 +126,7 @@ const AddExpense = () => {
                         style={[styles.saveButton, { backgroundColor: themeColors.primary.primary0 }]}
                         disabled={isSaving || isDeleting}
                     >
-                        {isSaving ? <ActivityIndicator color="#fff" /> : <Typography style={{ color: '#fff' }}>{expenseToEdit ? 'Update' : 'Save'}</Typography>}
+                        {isSaving ? <Loading /> : <Typography style={{ color: '#fff' }}>{expenseToEdit ? 'Update' : 'Save'}</Typography>}
                     </TouchableOpacity>
                 </View>
             </View>
