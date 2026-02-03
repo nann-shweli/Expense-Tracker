@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, TextInput, TouchableOpacity, Alert, Modal } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { format } from 'date-fns';
+import { Calendar } from 'react-native-calendars';
 
 import { addExpense, updateExpense, deleteExpense, ExpenseData } from '../../services/firestore';
 import Typography from '../../components/atoms/Typography';
@@ -8,7 +10,7 @@ import { useTheme } from '../../hooks/useTheme';
 import Loading from '../../components/atoms/Loading';
 
 const AddExpense = () => {
-    const { themeColors } = useTheme();
+    const { themeColors, currentTheme } = useTheme();
     const navigation = useNavigation();
     const route = useRoute<any>();
     const expenseToEdit: ExpenseData | undefined = route.params?.expense;
@@ -16,6 +18,8 @@ const AddExpense = () => {
     const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
     const [category, setCategory] = useState('General');
+    const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+    const [showDatePicker, setShowDatePicker] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -24,6 +28,9 @@ const AddExpense = () => {
             setAmount(String(expenseToEdit.amount));
             setDescription(expenseToEdit.description);
             setCategory(expenseToEdit.category);
+
+            const date = expenseToEdit.date?.toDate ? expenseToEdit.date.toDate() : new Date(expenseToEdit.date);
+            setSelectedDate(format(date, 'yyyy-MM-dd'));
         }
     }, [expenseToEdit]);
 
@@ -35,10 +42,10 @@ const AddExpense = () => {
 
         try {
             setIsSaving(true);
-            const expenseDate = new Date();
+            const expenseDate = new Date(selectedDate);
 
             if (expenseToEdit && expenseToEdit.id) {
-                await updateExpense(expenseToEdit.id, Number(amount), description, category);
+                await updateExpense(expenseToEdit.id, Number(amount), description, category, expenseDate);
             } else {
                 await addExpense(Number(amount), description, category, expenseDate);
             }
@@ -87,6 +94,13 @@ const AddExpense = () => {
         <View style={[styles.container, { backgroundColor: themeColors.container.backgroundColor }]}>
             <View style={styles.content}>
                 <Typography size={24} style={styles.title}>{expenseToEdit ? 'Edit Expense' : 'Add Expense'}</Typography>
+                <Typography color="secondary" size={15} style={styles.dateLabel}>Date</Typography>
+                <TouchableOpacity
+                    onPress={() => setShowDatePicker(true)}
+                    style={[styles.input, styles.dateInput, { borderColor: themeColors.text.secondary }]}
+                >
+                    <Typography color="primary" size={16}>{selectedDate}</Typography>
+                </TouchableOpacity>
 
                 <TextInput
                     placeholder="Amount"
@@ -130,6 +144,43 @@ const AddExpense = () => {
                     </TouchableOpacity>
                 </View>
             </View>
+
+            <Modal
+                visible={showDatePicker}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowDatePicker(false)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setShowDatePicker(false)}
+                >
+                    <View style={[styles.modalContent, { backgroundColor: themeColors.container.backgroundColor }]}>
+                        <Calendar
+                            key={currentTheme}
+                            current={selectedDate}
+                            markedDates={{
+                                [selectedDate]: { selected: true, selectedColor: themeColors.primary.primary0 }
+                            }}
+                            onDayPress={(day) => {
+                                setSelectedDate(day.dateString);
+                                setShowDatePicker(false);
+                            }}
+                            theme={{
+                                calendarBackground: themeColors.container.backgroundColor,
+                                textSectionTitleColor: themeColors.text.secondary,
+                                dayTextColor: themeColors.text.primary,
+                                monthTextColor: themeColors.text.primary,
+                                arrowColor: themeColors.primary.primary0,
+                                todayTextColor: themeColors.primary.primary0,
+                                selectedDayBackgroundColor: themeColors.primary.primary0,
+                                selectedDayTextColor: '#ffffff',
+                            }}
+                        />
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </View>
     );
 };
@@ -157,6 +208,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         marginBottom: 20,
         fontSize: 16,
+    },
+    dateInput: {
+        justifyContent: 'center',
+        paddingVertical: 5,
+    },
+    dateLabel: {
+        paddingBottom: 12
     },
     buttonContainer: {
         flexDirection: 'row',
@@ -186,5 +244,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#ff4444',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        width: '90%',
+        borderRadius: 20,
+        padding: 10,
+        elevation: 5,
     },
 });
