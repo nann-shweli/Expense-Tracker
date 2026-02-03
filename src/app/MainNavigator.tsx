@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 import BottomTabBar from '../navigation/BottomTabBar';
 import EditUser from '../screens/Home/Settings/EditUser';
+import AddExpense from '../screens/Home/AddExpense';
 import NavBarHeader from '../components/molecules/Header/NavBarHeader';
 
 const Stack = createStackNavigator();
@@ -27,6 +28,14 @@ const MainNavigator = () => {
         component={EditUser}
         options={{
           title: 'Edit Profile',
+        }}
+      />
+      <Stack.Screen
+        name="AddExpense"
+        component={AddExpense}
+        options={{
+          presentation: 'modal',
+          headerShown: false,
         }}
       />
     </Stack.Navigator>

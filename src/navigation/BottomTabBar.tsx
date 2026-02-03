@@ -2,6 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
 
 import Dashboard from '../screens/Home/Dashboard';
 import Expenses from '../screens/Home/Expense';
@@ -23,6 +24,7 @@ const AddButton = ({ onPress }: { onPress: () => void }) => {
 };
 
 const BottomTabBar = () => {
+  const navigation = useNavigation<any>();
   const { themeColors } = useTheme();
 
   return (
@@ -72,8 +74,8 @@ const BottomTabBar = () => {
         component={View}
         options={{
           tabBarLabel: '',
-          tabBarButton: () => (
-            <AddButton onPress={() => console.log('Open Add Modal')} />
+          tabBarButton: (props) => (
+            <AddButton onPress={() => navigation.navigate('AddExpense')} />
           ),
         }}
       />

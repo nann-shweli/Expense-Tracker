@@ -12,7 +12,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useState } from 'react';
 
 import { useTheme } from '../../hooks/useTheme';
-import { loginWithEmail, signUpWithEmail } from '../../services/auth/firebaseAuth';
+import { loginWithEmail, signUpWithEmail, signInWithGoogle } from '../../services/auth/firebaseAuth';
 
 
 const Login = () => {
@@ -27,27 +27,41 @@ const Login = () => {
   const toggleTheme = () => {
     setTheme(currentTheme === 'light' ? 'dark' : 'light');
   };
-const handleEmailAuth = async () => {
-  if (!email || !password) {
-    Alert.alert('Error', 'Please enter email and password');
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    if (isRegister) {
-      await signUpWithEmail(email, password);
-    } else {
-      await loginWithEmail(email, password);
+  const handleEmailAuth = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter email and password');
+      return;
     }
 
-  } catch (e: any) {
-    Alert.alert('Authentication failed', e.message);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+
+      if (isRegister) {
+        await signUpWithEmail(email, password);
+      } else {
+        await loginWithEmail(email, password);
+      }
+
+    } catch (e: any) {
+      Alert.alert('Authentication failed', e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+      await signInWithGoogle();
+    } catch (e: any) {
+      if (e.message !== 'User cancelled the login flow' && e.message !== 'Sign in is in progress') {
+        Alert.alert('Google Sign-In failed', e.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View
@@ -83,7 +97,7 @@ const handleEmailAuth = async () => {
             styles.input,
             {
               color: themeColors.text.primary,
-              borderColor: themeColors.text.primary 
+              borderColor: themeColors.text.primary
             },
           ]}
         />
@@ -98,7 +112,7 @@ const handleEmailAuth = async () => {
             styles.input,
             {
               color: themeColors.text.primary,
-              borderColor: themeColors.text.primary 
+              borderColor: themeColors.text.primary
             },
           ]}
         />
@@ -106,7 +120,7 @@ const handleEmailAuth = async () => {
         <TouchableOpacity
           style={[
             styles.loginButton,
-            { backgroundColor: themeColors.text.primary  },
+            { backgroundColor: themeColors.text.primary },
           ]}
           onPress={handleEmailAuth}
           disabled={loading}
@@ -118,6 +132,22 @@ const handleEmailAuth = async () => {
               {isRegister ? 'Register' : 'Login'}
             </Text>
           )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.loginButton,
+            { backgroundColor: '#fff', marginTop: 16, borderColor: '#ddd', borderWidth: 1 },
+          ]}
+          onPress={handleGoogleSignIn}
+          disabled={loading}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Icon name="logo-google" size={20} color="#000" style={{ marginRight: 8 }} />
+            <Text style={[styles.loginText, { color: '#000' }]}>
+              Sign in with Google
+            </Text>
+          </View>
         </TouchableOpacity>
 
         <TouchableOpacity

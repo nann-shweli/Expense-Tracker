@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigation as useRNavigation } from '@react-navigation/native';
+import { useNavigation as useRNavigation, useFocusEffect } from '@react-navigation/native';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import auth from '@react-native-firebase/auth';
@@ -9,8 +9,14 @@ import { useTheme } from '../../../hooks/useTheme';
 
 const Profile = () => {
   const { themeColors } = useTheme();
-  const user = auth().currentUser;
+  const [user, setUser] = React.useState(auth().currentUser);
   const { navigate } = useRNavigation<any>();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setUser(auth().currentUser);
+    }, [])
+  );
 
   const handleEdit = () => {
     navigate('EditUser');
@@ -23,7 +29,7 @@ const Profile = () => {
       </View>
 
       <View style={styles.name}>
-        <Text style={{ color: themeColors.text.primary }}>{user?.email}</Text>
+        <Text style={{ color: themeColors.text.primary }}>{user?.displayName || user?.email}</Text>
         <Text style={{ color: themeColors.text.secondary }}>
           Edit Profile & personal details
         </Text>
