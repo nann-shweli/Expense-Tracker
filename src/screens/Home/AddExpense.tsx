@@ -1,23 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TextInput, TouchableOpacity, Alert, Modal } from 'react-native';
+import { View, StyleSheet, TextInput, TouchableOpacity, Alert, Modal, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { format } from 'date-fns';
 import { Calendar } from 'react-native-calendars';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 import { addExpense, updateExpense, deleteExpense, ExpenseData } from '../../services/firestore';
 import Typography from '../../components/atoms/Typography';
 import { useTheme } from '../../hooks/useTheme';
 import Loading from '../../components/atoms/Loading';
+import { CATEGORIES, CATEGORY_COLORS } from '../../constants/categories';
 
 const AddExpense = () => {
     const { themeColors, currentTheme } = useTheme();
     const navigation = useNavigation();
     const route = useRoute<any>();
     const expenseToEdit: ExpenseData | undefined = route.params?.expense;
+    const initialCategory = route.params?.category;
 
     const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
-    const [category, setCategory] = useState('General');
+    const [category, setCategory] = useState('');
     const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -31,12 +34,14 @@ const AddExpense = () => {
 
             const date = expenseToEdit.date?.toDate ? expenseToEdit.date.toDate() : new Date(expenseToEdit.date);
             setSelectedDate(format(date, 'yyyy-MM-dd'));
+        } else if (initialCategory) {
+            setCategory(initialCategory);
         }
-    }, [expenseToEdit]);
+    }, [expenseToEdit, initialCategory]);
 
     const handleSave = async () => {
-        if (!amount || !description) {
-            Alert.alert('Error', 'Please enter amount and description');
+        if (!amount.trim() || !description.trim() || !category) {
+            Alert.alert('Error', 'Please fill in all fields (Amount, Description, and Category)');
             return;
         }
 
@@ -92,58 +97,94 @@ const AddExpense = () => {
 
     return (
         <View style={[styles.container, { backgroundColor: themeColors.container.backgroundColor }]}>
-            <View style={styles.content}>
-                <Typography size={24} style={styles.title}>{expenseToEdit ? 'Edit Expense' : 'Add Expense'}</Typography>
-                <Typography color="secondary" size={15} style={styles.dateLabel}>Date</Typography>
-                <TouchableOpacity
-                    onPress={() => setShowDatePicker(true)}
-                    style={[styles.input, styles.dateInput, { borderColor: themeColors.text.secondary }]}
-                >
-                    <Typography color="primary" size={16}>{selectedDate}</Typography>
-                </TouchableOpacity>
+            <ScrollView showsVerticalScrollIndicator={false}>
+                <View style={styles.content}>
+                    <Typography size={24} style={styles.title}>{expenseToEdit ? 'Edit Expense' : 'Add Expense'}</Typography>
 
-                <TextInput
-                    placeholder="Amount"
-                    placeholderTextColor={themeColors.text.secondary}
-                    keyboardType="numeric"
-                    value={amount}
-                    onChangeText={setAmount}
-                    style={[styles.input, { color: themeColors.text.primary, borderColor: themeColors.text.secondary }]}
-                    autoFocus={!expenseToEdit}
-                />
-
-                <TextInput
-                    placeholder="Description"
-                    placeholderTextColor={themeColors.text.secondary}
-                    value={description}
-                    onChangeText={setDescription}
-                    style={[styles.input, { color: themeColors.text.primary, borderColor: themeColors.text.secondary }]}
-                />
-
-                <View style={styles.buttonContainer}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.cancelButton}>
-                        <Typography color="secondary">Cancel</Typography>
-                    </TouchableOpacity>
-
-                    {expenseToEdit && (
-                        <TouchableOpacity
-                            onPress={handleDelete}
-                            style={[styles.deleteButton]}
-                            disabled={isDeleting || isSaving}
-                        >
-                            {isDeleting ? <Loading /> : <Typography style={{ color: '#fff' }}>Delete</Typography>}
-                        </TouchableOpacity>
-                    )}
-
+                    <Typography color="secondary" size={14} style={styles.label}>Date</Typography>
                     <TouchableOpacity
-                        onPress={handleSave}
-                        style={[styles.saveButton, { backgroundColor: themeColors.primary.primary0 }]}
-                        disabled={isSaving || isDeleting}
+                        onPress={() => setShowDatePicker(true)}
+                        style={[styles.input, styles.dateInput, { borderColor: themeColors.navbar.borderColor, backgroundColor: themeColors.card.fill1 }]}
                     >
-                        {isSaving ? <Loading /> : <Typography style={{ color: '#fff' }}>{expenseToEdit ? 'Update' : 'Save'}</Typography>}
+                        <Icon name="calendar-outline" size={20} color={themeColors.primary.primary0} style={{ marginRight: 10 }} />
+                        <Typography color="primary" size={16}>{selectedDate}</Typography>
                     </TouchableOpacity>
+
+                    <Typography color="secondary" size={14} style={styles.label}>Amount (MMK) <Typography color="error" size={14}>*</Typography></Typography>
+                    <TextInput
+                        placeholder="0"
+                        placeholderTextColor={themeColors.text.secondary}
+                        keyboardType="numeric"
+                        value={amount}
+                        onChangeText={setAmount}
+                        style={[styles.input, { color: themeColors.text.primary, borderColor: themeColors.navbar.borderColor, backgroundColor: themeColors.card.fill1 }]}
+                        autoFocus={!expenseToEdit}
+                    />
+
+                    <Typography color="secondary" size={14} style={styles.label}>Description <Typography color="error" size={14}>*</Typography></Typography>
+                    <TextInput
+                        placeholder="What was this for?"
+                        placeholderTextColor={themeColors.text.secondary}
+                        value={description}
+                        onChangeText={setDescription}
+                        style={[styles.input, { color: themeColors.text.primary, borderColor: themeColors.navbar.borderColor, backgroundColor: themeColors.card.fill1 }]}
+                    />
+
+                    <Typography color="secondary" size={14} style={styles.label}>Category <Typography color="error" size={14}>*</Typography></Typography>
+                    <View style={styles.categoryGrid}>
+                        {CATEGORIES.map((cat) => (
+                            <TouchableOpacity
+                                key={cat}
+                                onPress={() => setCategory(cat)}
+                                style={[
+                                    styles.categoryItem,
+                                    {
+                                        borderColor: category === cat ? CATEGORY_COLORS[cat] : themeColors.navbar.borderColor,
+                                        backgroundColor: category === cat ? CATEGORY_COLORS[cat] + '20' : themeColors.card.fill1
+                                    }
+                                ]}
+                            >
+                                <View style={[styles.dot, { backgroundColor: CATEGORY_COLORS[cat] }]} />
+                                <Typography
+                                    size={12}
+                                    style={{
+                                        color: category === cat ? themeColors.text.primary : themeColors.text.secondary,
+                                        fontWeight: category === cat ? 'bold' : 'normal'
+                                    }}
+                                >
+                                    {cat}
+                                </Typography>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.cancelButton}>
+                            <Typography color="secondary">Cancel</Typography>
+                        </TouchableOpacity>
+
+                        <View style={{ flex: 1, flexDirection: 'row' }}>
+                            {expenseToEdit && (
+                                <TouchableOpacity
+                                    onPress={handleDelete}
+                                    style={[styles.deleteButton]}
+                                    disabled={isDeleting || isSaving}
+                                >
+                                    {isDeleting ? <Loading /> : <Typography style={{ color: '#fff', fontWeight: 'bold' }}>Delete</Typography>}
+                                </TouchableOpacity>
+                            )}
+
+                            <TouchableOpacity
+                                onPress={handleSave}
+                                style={[styles.saveButton, { backgroundColor: themeColors.primary.primary0 }]}
+                                disabled={isSaving || isDeleting}
+                            >
+                                {isSaving ? <Loading /> : <Typography style={{ color: '#fff', fontWeight: 'bold' }}>{expenseToEdit ? 'Update' : 'Save'}</Typography>}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </View>
-            </View>
+            </ScrollView>
 
             <Modal
                 visible={showDatePicker}
@@ -190,39 +231,63 @@ export default AddExpense;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
     },
     content: {
-        flex: 1,
-        marginTop: 20,
+        padding: 20,
+        paddingTop: 40,
     },
     title: {
         fontWeight: 'bold',
         marginBottom: 30,
         textAlign: 'center',
     },
+    label: {
+        marginBottom: 8,
+        marginLeft: 4,
+    },
     input: {
-        height: 50,
+        height: 55,
         borderWidth: 1,
-        borderRadius: 10,
+        borderRadius: 12,
         paddingHorizontal: 15,
         marginBottom: 20,
         fontSize: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     dateInput: {
-        justifyContent: 'center',
-        paddingVertical: 5,
+        marginBottom: 20,
     },
-    dateLabel: {
-        paddingBottom: 12
+    categoryGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        marginBottom: 30,
+    },
+    categoryItem: {
+        width: '31%',
+        paddingVertical: 12,
+        paddingHorizontal: 8,
+        borderRadius: 12,
+        borderWidth: 1,
+        alignItems: 'center',
+        marginBottom: 10,
+        flexDirection: 'row',
+        justifyContent: 'center',
+    },
+    dot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginRight: 6,
     },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 20,
+        marginTop: 10,
+        paddingBottom: 40,
     },
     cancelButton: {
-        flex: 1,
         padding: 15,
         marginRight: 10,
         alignItems: 'center',
@@ -232,18 +297,20 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 15,
         marginLeft: 10,
-        borderRadius: 10,
+        borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
+        elevation: 2,
     },
     deleteButton: {
         flex: 1,
         padding: 15,
         marginLeft: 10,
-        borderRadius: 10,
+        borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#ff4444',
+        elevation: 2,
     },
     modalOverlay: {
         flex: 1,
