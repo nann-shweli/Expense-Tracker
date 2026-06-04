@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 
-import { useTheme } from '../../../hooks/useTheme';
 import Typography from '../../atoms/Typography';
 import MonthSelector from '../../molecules/Home/MonthSelector';
 import ChartView from '../../molecules/Home/ChartView';
@@ -19,8 +18,6 @@ const DashboardHeader = ({
     totalSpend,
     chartData
 }: DashboardHeaderProps) => {
-    const { themeColors } = useTheme();
-
     return (
         <View>
             <MonthSelector
@@ -36,8 +33,6 @@ const DashboardHeader = ({
                     <Typography color="secondary">No data for this month</Typography>
                 </View>
             )}
-
-            <Typography size={18} style={{ marginTop: 24, marginBottom: 12, fontWeight: '600' }}>Transactions</Typography>
         </View>
     );
 };

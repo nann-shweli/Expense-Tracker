@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { isSameMonth } from 'date-fns';
 import { useNavigation } from '@react-navigation/native';
 
@@ -68,16 +68,56 @@ const Dashboard = () => {
   }, [filteredExpenses, totalSpend, navigation]);
 
   const renderHeader = () => (
-    <DashboardHeader
-      selectedMonth={selectedMonth}
-      setSelectedMonth={setSelectedMonth}
-      totalSpend={totalSpend}
-      chartData={chartData}
-    />
+    <>
+      <DashboardHeader
+        selectedMonth={selectedMonth}
+        setSelectedMonth={setSelectedMonth}
+        totalSpend={totalSpend}
+        chartData={chartData}
+      />
+
+      <View
+        style={[
+          styles.historyPanelHeader,
+          {
+            backgroundColor: themeColors.card.fill1,
+          },
+        ]}
+      >
+        <Typography size={20} style={styles.historyTitle}>
+         Transactions
+        </Typography>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Expenses')}
+          style={styles.seeAllButton}
+        >
+          <Typography size={14} style={styles.seeAllText}>
+            See all
+          </Typography>
+        </TouchableOpacity>
+      </View>
+    </>
   );
 
-  const renderItem = ({ item }: { item: ExpenseData }) => (
-    <TransactionItems item={item} />
+  const renderItem = ({
+    item,
+    index,
+  }: {
+    item: ExpenseData;
+    index: number;
+  }) => (
+    <View
+      style={[
+        { backgroundColor: themeColors.card.fill1 },
+        index === filteredExpenses.length - 1 && styles.historyLastRow,
+      ]}
+    >
+      <TransactionItems
+        item={item}
+        isLast={index === filteredExpenses.length - 1}
+      />
+    </View>
   );
 
   return (
@@ -92,15 +132,22 @@ const Dashboard = () => {
         renderItem={renderItem}
         keyExtractor={(item, index) => item.id || index.toString()}
         ListHeaderComponent={renderHeader}
+        ListEmptyComponent={
+          <View
+            style={[
+              styles.historyEmpty,
+              {
+                backgroundColor: themeColors.card.fill1,
+              },
+            ]}
+          >
+            <Typography style={styles.emptyText} color="secondary">
+              No expenses for this month.
+            </Typography>
+          </View>
+        }
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          filteredExpenses.length === 0 ? null : (
-            <Typography style={styles.emptyText} color="secondary">
-              No more expenses.
-            </Typography>
-          )
-        }
       />
     </View>
   );
@@ -114,11 +161,46 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   scrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 12,
     paddingBottom: 100,
+  },
+  historyPanelHeader: {
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingTop: 26,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  historyTitle: {
+    fontWeight: '700',
+  },
+  historyLastRow: {
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
+    overflow: 'hidden',
+  },
+  historyEmpty: {
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
+  },
+  seeAllButton: {
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  seeAllText: {
+    fontWeight: '600',
   },
   emptyText: {
     textAlign: 'center',
-    marginTop: 20,
+    paddingVertical: 28,
   },
 });

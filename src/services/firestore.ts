@@ -49,6 +49,16 @@ export const getExpenseDate = (expense: Pick<ExpenseData, 'date'>) => {
   return toDate(expense.date);
 };
 
+export const getExpenseCreatedDate = (
+  expense: Pick<ExpenseData, 'createdAt' | 'createdAtClient'>,
+) => {
+  if (expense.createdAtClient) {
+    return new Date(expense.createdAtClient);
+  }
+
+  return toDate(expense.createdAt);
+};
+
 const getExpenseDayTime = (expense: Pick<ExpenseData, 'date'>) => {
   const date = getExpenseDate(expense);
   if (!date) return 0;
@@ -63,7 +73,7 @@ const getExpenseDayTime = (expense: Pick<ExpenseData, 'date'>) => {
 const getExpenseCreatedTime = (
   expense: Pick<ExpenseData, 'createdAt' | 'createdAtClient'>,
 ) => {
-  return expense.createdAtClient || toDate(expense.createdAt)?.getTime() || 0;
+  return getExpenseCreatedDate(expense)?.getTime() || 0;
 };
 
 export const sortExpensesByDateDesc = (
