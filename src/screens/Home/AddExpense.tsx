@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TextInput, TouchableOpacity, Alert, Modal, ScrollView } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, StyleSheet, TextInput, TouchableOpacity, Alert, Modal, ScrollView, Pressable } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { Calendar } from 'react-native-calendars';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -11,17 +11,92 @@ import { useTheme } from '../../hooks/useTheme';
 import Loading from '../../components/atoms/Loading';
 import { CATEGORIES, CATEGORY_COLORS } from '../../constants/categories';
 
+const getTodayDateString = () => format(new Date(), 'yyyy-MM-dd');
+
+const parseExpenseDate = (dateString: string) =>
+    parse(dateString, 'yyyy-MM-dd', new Date());
+
+const sanitizeAmountInput = (value: string) => {
+    const valueWithoutCommas = value.replace(/,/g, '');
+    let nextValue = '';
+    let hasDecimal = false;
+
+    for (const char of valueWithoutCommas) {
+        if (/\d/.test(char)) {
+            nextValue += char;
+            continue;
+        }
+
+        if (char === '.' && !hasDecimal) {
+            nextValue += char;
+            hasDecimal = true;
+        }
+    }
+
+    const [integerPart, decimalPart] = nextValue.split('.');
+    const normalizedInteger = integerPart.replace(/^0+(?=\d)/, '');
+
+    if (decimalPart !== undefined) {
+        return `${normalizedInteger || '0'}.${decimalPart.slice(0, 2)}`;
+    }
+
+    return normalizedInteger || (integerPart ? '0' : '');
+};
+
+const formatAmountForDisplay = (value: string) => {
+    if (!value) return '';
+
+    const [integerPart, decimalPart] = value.split('.');
+    const formattedInteger = (integerPart || '0').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+    if (value.endsWith('.')) {
+        return `${formattedInteger}.`;
+    }
+
+    if (decimalPart !== undefined) {
+        return `${formattedInteger}.${decimalPart}`;
+    }
+
+    return formattedInteger;
+};
+
+const FIRESTORE_WRITE_TIMEOUT_MS = 5000;
+
+const waitForFirestoreWrite = async (writePromise: Promise<void>) => {
+    let timedOut = false;
+
+    const handledWrite = writePromise.catch(error => {
+        if (timedOut) {
+            console.error('Expense write failed after modal closed:', error);
+            return;
+        }
+
+        throw error;
+    });
+
+    await Promise.race([
+        handledWrite,
+        new Promise<void>(resolve => {
+            setTimeout(() => {
+                timedOut = true;
+                resolve();
+            }, FIRESTORE_WRITE_TIMEOUT_MS);
+        }),
+    ]);
+};
+
 const AddExpense = () => {
     const { themeColors, currentTheme } = useTheme();
     const navigation = useNavigation();
     const route = useRoute<any>();
     const expenseToEdit: ExpenseData | undefined = route.params?.expense;
     const initialCategory = route.params?.category;
+    const initialDate: string | undefined = route.params?.initialDate;
 
     const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
     const [category, setCategory] = useState('');
-    const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+    const [selectedDate, setSelectedDate] = useState(() => initialDate || getTodayDateString());
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -34,35 +109,54 @@ const AddExpense = () => {
 
             const date = expenseToEdit.date?.toDate ? expenseToEdit.date.toDate() : new Date(expenseToEdit.date);
             setSelectedDate(format(date, 'yyyy-MM-dd'));
-        } else if (initialCategory) {
-            setCategory(initialCategory);
+        } else {
+            setSelectedDate(initialDate || getTodayDateString());
+            setCategory(initialCategory || '');
         }
-    }, [expenseToEdit, initialCategory]);
+    }, [expenseToEdit, initialCategory, initialDate]);
+
+    const selectedDateLabel = useMemo(() => {
+        return format(parseExpenseDate(selectedDate), 'dd MMM yyyy');
+    }, [selectedDate]);
+
+    const displayAmount = useMemo(() => {
+        return formatAmountForDisplay(amount);
+    }, [amount]);
 
     const handleSave = async () => {
+        const amountValue = Number(amount);
+
         if (!amount.trim() || !description.trim() || !category) {
             Alert.alert('Error', 'Please fill in all fields (Amount, Description, and Category)');
             return;
         }
 
+        if (!Number.isFinite(amountValue) || amountValue <= 0) {
+            Alert.alert('Error', 'Please enter a valid amount');
+            return;
+        }
+
+        let shouldClose = false;
+
         try {
             setIsSaving(true);
-            const expenseDate = new Date(selectedDate);
+            const expenseDate = parseExpenseDate(selectedDate);
 
             if (expenseToEdit && expenseToEdit.id) {
-                await updateExpense(expenseToEdit.id, Number(amount), description, category, expenseDate);
+                await waitForFirestoreWrite(updateExpense(expenseToEdit.id, amountValue, description, category, expenseDate));
             } else {
-                await addExpense(Number(amount), description, category, expenseDate);
+                await waitForFirestoreWrite(addExpense(amountValue, description, category, expenseDate));
             }
 
-            setIsSaving(false);
-            setTimeout(() => {
-                navigation.goBack();
-            }, 50);
-
+            shouldClose = true;
         } catch (error: any) {
+            Alert.alert('Error', error?.message || 'Unable to save expense.');
+        } finally {
             setIsSaving(false);
-            Alert.alert('Error', error.message);
+
+            if (shouldClose) {
+                navigation.goBack();
+            }
         }
     };
 
@@ -78,16 +172,20 @@ const AddExpense = () => {
                     text: 'Delete',
                     style: 'destructive',
                     onPress: async () => {
+                        let shouldClose = false;
+
                         try {
                             setIsDeleting(true);
-                            await deleteExpense(expenseToEdit.id!);
-                            setIsDeleting(false);
-                            setTimeout(() => {
-                                navigation.goBack();
-                            }, 50);
+                            await waitForFirestoreWrite(deleteExpense(expenseToEdit.id!));
+                            shouldClose = true;
                         } catch (error: any) {
+                            Alert.alert('Error', error?.message || 'Unable to delete expense.');
+                        } finally {
                             setIsDeleting(false);
-                            Alert.alert('Error', error.message);
+
+                            if (shouldClose) {
+                                navigation.goBack();
+                            }
                         }
                     }
                 }
@@ -107,16 +205,16 @@ const AddExpense = () => {
                         style={[styles.input, styles.dateInput, { borderColor: themeColors.navbar.borderColor, backgroundColor: themeColors.card.fill1 }]}
                     >
                         <Icon name="calendar-outline" size={20} color={themeColors.primary.primary0} style={{ marginRight: 10 }} />
-                        <Typography color="primary" size={16}>{selectedDate}</Typography>
+                        <Typography color="primary" size={16}>{selectedDateLabel}</Typography>
                     </TouchableOpacity>
 
                     <Typography color="secondary" size={14} style={styles.label}>Amount (MMK) <Typography color="error" size={14}>*</Typography></Typography>
                     <TextInput
                         placeholder="0"
                         placeholderTextColor={themeColors.text.secondary}
-                        keyboardType="numeric"
-                        value={amount}
-                        onChangeText={setAmount}
+                        keyboardType="decimal-pad"
+                        value={displayAmount}
+                        onChangeText={(value) => setAmount(sanitizeAmountInput(value))}
                         style={[styles.input, { color: themeColors.text.primary, borderColor: themeColors.navbar.borderColor, backgroundColor: themeColors.card.fill1 }]}
                         autoFocus={!expenseToEdit}
                     />
@@ -192,15 +290,31 @@ const AddExpense = () => {
                 animationType="fade"
                 onRequestClose={() => setShowDatePicker(false)}
             >
-                <TouchableOpacity
-                    style={styles.modalOverlay}
-                    activeOpacity={1}
-                    onPress={() => setShowDatePicker(false)}
-                >
-                    <View style={[styles.modalContent, { backgroundColor: themeColors.container.backgroundColor }]}>
+                <View style={styles.modalOverlay}>
+                    <Pressable
+                        style={styles.modalBackdrop}
+                        onPress={() => setShowDatePicker(false)}
+                    />
+
+                    <View style={[styles.modalContent, { backgroundColor: themeColors.card.fill1, borderColor: themeColors.navbar.borderColor }]}>
+                        <View style={styles.modalHeader}>
+                            <View style={styles.modalHeaderText}>
+                                <Typography size={18} style={styles.modalTitle}>Choose date</Typography>
+                                <Typography size={13} color="secondary">{selectedDateLabel}</Typography>
+                            </View>
+
+                            <TouchableOpacity
+                                onPress={() => setShowDatePicker(false)}
+                                style={[styles.closeButton, { backgroundColor: themeColors.primary.primary0 + '14' }]}
+                            >
+                                <Icon name="close" size={20} color={themeColors.primary.primary0} />
+                            </TouchableOpacity>
+                        </View>
+
                         <Calendar
                             key={currentTheme}
                             current={selectedDate}
+                            style={styles.modalCalendar}
                             markedDates={{
                                 [selectedDate]: { selected: true, selectedColor: themeColors.primary.primary0 }
                             }}
@@ -208,8 +322,15 @@ const AddExpense = () => {
                                 setSelectedDate(day.dateString);
                                 setShowDatePicker(false);
                             }}
+                            renderArrow={(direction) => (
+                                <Icon
+                                    name={direction === 'left' ? 'chevron-back' : 'chevron-forward'}
+                                    size={22}
+                                    color={themeColors.primary.primary0}
+                                />
+                            )}
                             theme={{
-                                calendarBackground: themeColors.container.backgroundColor,
+                                calendarBackground: themeColors.card.fill1,
                                 textSectionTitleColor: themeColors.text.secondary,
                                 dayTextColor: themeColors.text.primary,
                                 monthTextColor: themeColors.text.primary,
@@ -217,10 +338,19 @@ const AddExpense = () => {
                                 todayTextColor: themeColors.primary.primary0,
                                 selectedDayBackgroundColor: themeColors.primary.primary0,
                                 selectedDayTextColor: '#ffffff',
+                                textDisabledColor: themeColors.grey.grey100,
+                                textDayFontWeight: '500',
+                                textMonthFontWeight: '700',
+                                textDayHeaderFontWeight: '600',
+                                textDayFontSize: 15,
+                                textMonthFontSize: 18,
+                                textDayHeaderFontSize: 12,
                             }}
+                            hideExtraDays
+                            enableSwipeMonths
                         />
                     </View>
-                </TouchableOpacity>
+                </View>
             </Modal>
         </View>
     );
@@ -317,11 +447,45 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
+        paddingHorizontal: 20,
+    },
+    modalBackdrop: {
+        ...StyleSheet.absoluteFillObject,
     },
     modalContent: {
-        width: '90%',
-        borderRadius: 20,
-        padding: 10,
-        elevation: 5,
+        width: '100%',
+        maxWidth: 380,
+        borderRadius: 18,
+        padding: 16,
+        borderWidth: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.18,
+        shadowRadius: 18,
+        elevation: 8,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    modalHeaderText: {
+        flex: 1,
+        marginRight: 12,
+    },
+    modalTitle: {
+        fontWeight: 'bold',
+        marginBottom: 4,
+    },
+    closeButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    modalCalendar: {
+        borderRadius: 14,
     },
 });

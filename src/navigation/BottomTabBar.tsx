@@ -9,6 +9,10 @@ import Expenses from '../screens/Home/Expense';
 import { useTheme } from '../hooks/useTheme';
 import Setting from '../screens/Home/Settings/Setting';
 import Subscription from '../screens/Home/Subscription';
+import {
+  ExpenseDateProvider,
+  useExpenseDate,
+} from '../context/ExpenseDateContext';
 
 const Tab = createBottomTabNavigator();
 
@@ -24,8 +28,20 @@ const AddButton = ({ onPress }: { onPress: () => void }) => {
   );
 };
 
-const BottomTabBar = () => {
+const AddExpenseButton = () => {
   const navigation = useNavigation<any>();
+  const { selectedExpenseDate } = useExpenseDate();
+
+  return (
+    <AddButton
+      onPress={() =>
+        navigation.navigate('AddExpense', { initialDate: selectedExpenseDate })
+      }
+    />
+  );
+};
+
+const BottomTabBarContent = () => {
   const { themeColors } = useTheme();
 
   return (
@@ -75,9 +91,7 @@ const BottomTabBar = () => {
         component={View}
         options={{
           tabBarLabel: '',
-          tabBarButton: (props) => (
-            <AddButton onPress={() => navigation.navigate('AddExpense')} />
-          ),
+          tabBarButton: () => <AddExpenseButton />,
         }}
       />
 
@@ -103,6 +117,14 @@ const BottomTabBar = () => {
         }}
       />
     </Tab.Navigator>
+  );
+};
+
+const BottomTabBar = () => {
+  return (
+    <ExpenseDateProvider>
+      <BottomTabBarContent />
+    </ExpenseDateProvider>
   );
 };
 

@@ -5,7 +5,12 @@ import { useNavigation } from '@react-navigation/native';
 
 import Typography from '../../components/atoms/Typography';
 import { useTheme } from '../../hooks/useTheme';
-import { subscribeToExpenses, ExpenseData } from '../../services/firestore';
+import {
+  subscribeToExpenses,
+  ExpenseData,
+  getExpenseDate,
+  sortExpensesByDateDesc,
+} from '../../services/firestore';
 import { CATEGORY_COLORS } from '../../constants/categories';
 import TransactionItems from '../../components/molecules/Home/TransactionItems';
 import DashboardHeader from '../../components/organisms/Home/DashboardHeader';
@@ -28,20 +33,12 @@ const Dashboard = () => {
   const filteredExpenses = useMemo(() => {
     return expenses
       .filter(exp => {
-        if (!exp.date) return false;
-
-        const itemDate = exp.date?.toDate
-          ? exp.date.toDate()
-          : new Date(exp.date);
+        const itemDate = getExpenseDate(exp);
+        if (!itemDate) return false;
 
         return isSameMonth(itemDate, selectedMonth);
       })
-      .sort((a, b) => {
-        const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
-        const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
-
-        return dateB.getTime() - dateA.getTime();
-      });
+      .sort(sortExpensesByDateDesc);
   }, [expenses, selectedMonth]);
 
   const totalSpend = useMemo(() => {
